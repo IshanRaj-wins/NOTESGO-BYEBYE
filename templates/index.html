@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Browse the vault · Studit{% endblock %}
+{% block content %}
+<section class="mesh-bg">
+  <div class="max-w-6xl mx-auto px-4 page-top pb-14 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+    <div class="min-w-0">
+      <div class="eyebrow-s"><i data-lucide="sparkles"></i> AI study plans from real, upvoted resources</div>
+      <h1 class="h-serif text-[2.8rem] sm:text-7xl mt-5">Every note, PYQ and reference.<br><em>One place.</em></h1>
+      <p class="mt-5 text-bone/65 max-w-xl leading-relaxed">No more digging through WhatsApp groups and dead Drive links the night before exams. Find what toppers actually used, and let AI plan your prep.</p>
+      <label class="cmd mt-8 max-w-2xl" for="q">
+        <i data-lucide="search"></i>
+        <input id="q" type="search" autocomplete="off" placeholder="Search 'normalization', 'OS PYQ 2023'…">
+        <kbd class="hidden sm:inline-grid">/</kbd>
+      </label>
+      <div id="chips" class="mt-5 -mx-4 px-4 flex sm:flex-wrap gap-2 overflow-x-auto no-scrollbar">
+        <button data-chip="" class="chip chip-s on">All</button>
+        {% for s in SUBJECTS %}<button data-chip="{{ s }}" class="chip chip-s">{{ s }}</button>{% endfor %}
+      </div>
+    </div>
+    <canvas data-glyph="vault" data-size="300" class="hidden lg:block"></canvas>
+  </div>
+  <div class="max-w-6xl mx-auto px-4 pb-10 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[12px] uppercase tracking-wider text-bone/55">
+    <span><b class="text-ember font-medium">{{ "{:,}".format(stats.resources) }}</b> resources</span>
+    <span><b class="text-bone font-medium">{{ stats.subjects }}</b> subjects</span>
+    <span><b class="text-bone font-medium">{{ stats.contributors }}</b> contributors</span>
+    <span><b class="text-bone font-medium">{{ "{:,}".format(stats.views) }}</b> views</span>
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-4 pt-10">
+  <div class="eyebrow-s"><i data-lucide="flame"></i> Trending before exams</div>
+  <h2 class="h-serif text-4xl mt-2">What the batch is opening <em>right now</em></h2>
+  <div class="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-3 pt-5 snap-x">
+    {% for t in trending %}
+    <a href="/resource/{{ t.id }}" class="sv-card lift group snap-start shrink-0 w-72 p-5 overflow-hidden">
+      <span class="absolute right-4 top-1 font-serif text-7xl text-sand/20 group-hover:text-sand/40 transition select-none">{{ loop.index }}</span>
+      <span class="type-dot" data-type="{{ t.type }}">{{ t.type }}</span>
+      <div class="relative font-medium mt-4 line-clamp-2 leading-snug pr-8">{{ t.title }}</div>
+      <div class="meta mt-3 flex items-center gap-3"><span>{{ t.subject }}</span><span class="inline-flex items-center gap-1"><i data-lucide="arrow-big-up"></i>{{ t.upvotes }}</span><span class="inline-flex items-center gap-1"><i data-lucide="eye"></i>{{ t.views }}</span></div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="bookmarks" class="max-w-6xl mx-auto px-4 pt-12 hidden scroll-mt-24">
+  <div class="eyebrow-s"><i data-lucide="bookmark"></i> Saved on this device</div>
+  <h2 class="h-serif text-4xl mt-2 mb-5">Your bookmarks</h2>
+  <div id="bm-grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+</section>
+
+<section id="browse" class="max-w-6xl mx-auto px-4 pt-14 scroll-mt-40">
+  <div class="flex items-end justify-between gap-4 mb-5">
+    <div>
+      <div class="eyebrow-s"><i data-lucide="library"></i> The library</div>
+      <h2 class="h-serif text-4xl mt-2">Browse resources</h2>
+    </div>
+    <p id="count" class="meta pb-1">Loading…</p>
+  </div>
+  <div class="toolbar mb-6">
+    <div class="flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-[rgba(10,9,8,.8)] border border-bone/10 backdrop-blur-xl">
+      <select id="subject" class="sv-select !h-11 !w-auto flex-1 sm:flex-none"><option value="">All subjects</option>{% for s in SUBJECTS %}<option>{{ s }}</option>{% endfor %}</select>
+      <select id="semester" class="sv-select !h-11 !w-auto flex-1 sm:flex-none"><option value="">All semesters</option>{% for n in range(1, 9) %}<option value="{{ n }}">Semester {{ n }}</option>{% endfor %}</select>
+      <select id="type" class="sv-select !h-11 !w-auto flex-1 sm:flex-none"><option value="">All types</option>{% for t in TYPES %}<option>{{ t }}</option>{% endfor %}</select>
+      <input type="hidden" id="sort" value="top">
+      <div class="seg sm:ml-auto" id="sort-seg">
+        <span class="seg-thumb"></span>
+        <button type="button" data-sort="top" aria-pressed="true"><i data-lucide="arrow-big-up"></i>Top</button>
+        <button type="button" data-sort="new" aria-pressed="false"><i data-lucide="clock"></i>Newest</button>
+        <button type="button" data-sort="views" aria-pressed="false"><i data-lucide="eye"></i>Most viewed</button>
+      </div>
+    </div>
+  </div>
+  <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ids = ["q", "subject", "semester", "type", "sort"];
+  let timer;
+  document.querySelectorAll(".type-dot[data-type]").forEach((el) => el.style.setProperty("--tc", TYPE_COLOR[el.dataset.type] || TYPE_COLOR.Syllabus));
+
+  async function load() {
+    const params = new URLSearchParams();
+    ids.forEach((id) => { const v = $("#" + id).value.trim(); if (v) params.set(id, v); });
+    $("#grid").innerHTML = skeleton();
+    try {
+      const rows = await (await fetch("/api/resources?" + params)).json();
+      $("#count").textContent = `${rows.length} resource${rows.length === 1 ? "" : "s"} found`;
+      $("#grid").innerHTML = rows.length ? rows.map(cardHTML).join("") :
+        emptyState("search", "Nothing here yet", "No resources match these filters. Share one, or ask the batch for it on the Request Board.", "/requests", "Request this resource");
+    } catch {
+      $("#grid").innerHTML = emptyState("unlink", "Couldn't load resources", "Check your connection and try again.");
+    }
+    icons();
+    paintChips();
+  }
+
+  function paintChips() {
+    const s = $("#subject").value;
+    document.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.chip === s));
+  }
+
+  // segmented sort control
+  const seg = $("#sort-seg"), thumb = seg.querySelector(".seg-thumb");
+  function paintSeg(instant) {
+    const b = seg.querySelector(`[data-sort="${$("#sort").value}"]`) || seg.querySelector("button");
+    seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    if (instant) thumb.style.transition = "none";
+    thumb.style.width = b.offsetWidth + "px"; thumb.style.transform = `translateX(${b.offsetLeft}px)`;
+    if (instant) requestAnimationFrame(() => (thumb.style.transition = ""));
+  }
+  seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { $("#sort").value = b.dataset.sort; paintSeg(); load(); }));
+  addEventListener("resize", () => paintSeg(true));
+
+  async function loadBookmarks() {
+    const bm = getBookmarks();
+    $("#bookmarks").classList.toggle("hidden", !bm.length);
+    if (!bm.length) return;
+    const rows = await (await fetch("/api/resources?ids=" + bm.join(","))).json();
+    $("#bm-grid").innerHTML = rows.map(cardHTML).join("");
+    icons();
+  }
+
+  $("#q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(load, 250); });
+  $("#q").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#browse").scrollIntoView({ behavior: "smooth" }); });
+  addEventListener("keydown", (e) => {
+    if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $("#q").focus(); }
+  });
+  ["subject", "semester", "type"].forEach((id) => $("#" + id).addEventListener("change", load));
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
+    $("#subject").value = c.dataset.chip; load();
+    $("#browse").scrollIntoView({ behavior: "smooth" });
+  }));
+  document.addEventListener("bookmarks-changed", loadBookmarks);
+
+  const qs = new URLSearchParams(location.search);
+  ids.forEach((id) => { if (qs.get(id)) $("#" + id).value = qs.get(id); });
+  addEventListener("load", () => paintSeg(true));
+  document.fonts?.ready.then(() => paintSeg(true));
+  load();
+  loadBookmarks().then(() => { if (location.hash === "#bookmarks") $("#bookmarks").scrollIntoView(); });
+</script>
+{% endblock %}

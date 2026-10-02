@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Studit · Every note, PYQ and reference in one place{% endblock %}</title>
+  <meta name="theme-color" content="#050505">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='34' fill='none' stroke='%23ff5005' stroke-width='14'/></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { corePlugins: { preflight: true }, theme: { extend: {
+      fontFamily: { sans: ["Geist", "system-ui", "sans-serif"], serif: ['"Instrument Serif"', "Georgia", "serif"], mono: ['"Geist Mono"', "monospace"] },
+      colors: { ink: "#050505", bone: "#ede8df", ember: "#ff5005", sand: "#dbba95", lilac: "#d0bce1" } } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='halo.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <main class="flex-1">{% block content %}{% endblock %}</main>
+
+  <footer class="sv-foot">
+    <div class="max-w-6xl mx-auto px-4">
+      <section class="foot-cta mesh-bg">
+        <div class="foot-cta-copy">
+          <div class="eyebrow-s"><i data-lucide="timer"></i> Before you close this tab</div>
+          <h2 class="h-serif foot-cta-h">Exam soon? <em>Find it in five seconds.</em></h2>
+          <form action="/browse" method="get" class="cmd foot-search" role="search">
+            <i data-lucide="search"></i>
+            <input name="q" type="search" placeholder="Try 'OS PYQ 2023' or 'normalization'" aria-label="Search Studit" autocomplete="off">
+            <button class="btn btn-ember btn-sm !h-10" type="submit">Search <span class="arrow">→</span></button>
+          </form>
+          <div class="foot-subj">
+            {% for s in SUBJECTS %}<a href="/browse?subject={{ s|urlencode }}#browse" class="chip-s inline-flex items-center">{{ s }}</a>{% endfor %}
+          </div>
+        </div>
+        <canvas data-glyph="sparkles" data-size="210" class="foot-art"></canvas>
+      </section>
+    </div>
+    <div class="foot-bar max-w-6xl mx-auto px-4">
+      <a href="/" class="foot-brand"><span class="brand-ring"></span><span class="font-serif">Studit</span></a>
+      <nav class="foot-links" aria-label="Footer">
+        <a href="/browse">Browse</a><a href="/ask">Exam Prep AI</a><a href="/requests">Requests</a><a href="/add">Share</a>
+        {% if user %}<a href="/dashboard">Dashboard</a>{% else %}<a href="/login">Sign in</a>{% endif %}
+      </nav>
+      <a href="/#sdg" id="sdg" class="sdg-chip" title="UN SDG 4 · Quality Education · targets 4.3 &amp; 4.a"><span class="sdg-sq">4</span> Quality Education</a>
+      <span class="foot-copy">© 2026 · Built for BMSCE</span>
+    </div>
+  </footer>
+
+  <div id="toasts" class="fixed bottom-24 sm:bottom-5 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 items-end pointer-events-none"></div>
+  <script>const SV_USER = {{ user|tojson }};</script>
+  <script src="{{ url_for('static', filename='icons.js') }}"></script>
+  <script src="{{ url_for('static', filename='glyph.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+  <script>icons();</script>
+</body>
+</html>

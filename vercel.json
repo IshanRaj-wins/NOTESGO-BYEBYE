@@ -1,0 +1,5 @@
+{
+  "framework": "flask",
+  "regions": ["bom1"],
+  "crons": [{ "path": "/cron/daily", "schedule": "0 3 * * *" }]
+}

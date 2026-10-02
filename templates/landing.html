@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studit · BMSCE's exam vault</title>
+  <meta name="description" content="Notes, PYQs and references for BMSCE students, searchable, upvoted, and turned into an exam plan by AI.">
+  <meta name="theme-color" content="#050505">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='34' fill='none' stroke='%23ff5005' stroke-width='14'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='halo.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="is-loading">
+  <canvas id="halo" aria-hidden="true"></canvas>
+  <div class="halo-fallback" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="progress" aria-hidden="true"></div>
+  {% include "_nav.html" %}
+
+  <main id="smooth">
+    <!-- ============ 1. HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="wrap hero-in">
+        <p class="mono eyebrow reveal-up"><span class="dot"></span> Built for BMSCE · Semester 3 to 5</p>
+        <h1 class="serif hero-title" data-split>Every PYQ your seniors <em>wished</em> they had.</h1>
+        <p class="hero-sub reveal-up">Notes, previous-year papers and references, all in one searchable vault. Upvoted by the batch, and turned into a day-by-day exam plan by AI.</p>
+        <div class="hero-ctas reveal-up">
+          <a href="{{ '/dashboard' if user else '/login' }}" class="btn btn-ember">{{ 'Open your dashboard' if user else 'Join with your BMSCE email' }} <span class="arrow">→</span></a>
+          <a href="/browse" class="btn btn-ghost">Browse the vault</a>
+        </div>
+      </div>
+      <div class="wrap hero-foot mono">
+        <span><b class="ember" data-count="{{ stats.resources }}">{{ stats.resources }}</b> resources</span>
+        <span><b data-count="{{ stats.subjects }}">{{ stats.subjects }}</b> subjects</span>
+        <span><b data-count="{{ stats.contributors }}">{{ stats.contributors }}</b> contributors</span>
+        <span class="scroll-cue">Scroll <i></i></span>
+      </div>
+    </section>
+
+    <!-- ============ 2. THE PROBLEM (pinned) ============ -->
+    <section class="problem" id="problem">
+      <div class="problem-stage">
+        <div class="chips" aria-hidden="true">
+          <span class="chip" style="--x:-27vw;--y:-26vh"><i data-lucide="message-circle"></i> <b>CSE-B Official</b> anyone has DBMS unit 3 notes??</span>
+          <span class="chip" style="--x:24vw;--y:-30vh"><i data-lucide="link-2-off"></i> drive.google.com/…/view: <i>Access denied</i></span>
+          <span class="chip" style="--x:-24vw;--y:22vh"><i data-lucide="file-question"></i> os_pyq_2023_final_FINAL(2).pdf</span>
+          <span class="chip" style="--x:26vw;--y:17vh"><i data-lucide="message-circle"></i> <b>Seniors 2024</b> check the pinned msg (it's gone)</span>
+          <span class="chip" style="--x:-8vw;--y:-38vh"><i data-lucide="globe"></i> random-notes-site.xyz · 14 pop-ups</span>
+          <span class="chip" style="--x:6vw;--y:34vh"><i data-lucide="clock"></i> bro exam is in 3 days</span>
+          <span class="chip" style="--x:-32vw;--y:2vh"><i data-lucide="paperclip"></i> CN_Module4 (1) (1).pptx</span>
+          <span class="chip" style="--x:31vw;--y:-6vh"><i data-lucide="link-2-off"></i> bit.ly/dsa-notes · <i>link expired</i></span>
+        </div>
+        <canvas class="p-core" data-glyph="files" data-size="360"></canvas>
+        <div class="problem-copy">
+          <p class="mono muted p-line p-line-1">The problem</p>
+          <h2 class="serif p-title p-title-1">Exam in three days.<br>Notes in <span class="ember">fourteen</span> WhatsApp groups.</h2>
+          <h2 class="serif p-title p-title-2">So we built <em class="sand">one vault.</em></h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. ONE VAULT (bento) ============ -->
+    <section class="features" id="features">
+      <div class="features-head wrap">
+        <p class="mono muted">What's inside</p>
+        <h2 class="serif">Find it. Plan it. <em class="sand">Ask for it.</em></h2>
+      </div>
+      <div class="bento wrap">
+        <article class="tile sv-card t-search">
+          <div class="tile-copy">
+            <span class="mono ember">01 · Search</span>
+            <h3 class="serif">Everything for your exam, in one search.</h3>
+            <p class="muted">Filter by subject, semester and type. The best resources float to the top because students upvote what actually helped.</p>
+            <a href="/browse" class="link">Browse the vault <span class="arrow">→</span></a>
+          </div>
+          <div class="mock">
+            <div class="mock-search"><i data-lucide="search"></i><span class="typed" data-typed="dbms normalization pyq"></span><span class="caret"></span></div>
+            <div class="mock-filters"><span class="on">DBMS</span><span>Sem 4</span><span>PYQ</span><span>Top</span></div>
+            <ul class="mock-list">
+              <li><span class="tag t-pyq">PYQ</span> DBMS End-Sem 2024, solved <b>▲ 128</b></li>
+              <li><span class="tag t-notes">Notes</span> Normalization 1NF→BCNF, handwritten <b>▲ 96</b></li>
+              <li><span class="tag t-ref">Ref</span> Korth Ch. 7 summary <b>▲ 71</b></li>
+            </ul>
+          </div>
+        </article>
+        <article class="tile sv-card t-ai">
+          <div class="tile-top"><span class="mono lilac">02 · Exam Prep AI</span><canvas data-glyph="sparkles" data-size="96" data-cell="4"></canvas></div>
+          <h3 class="serif">"Exam in 3 days" becomes a plan.</h3>
+          <div class="mock">
+            <div class="mock-plan-h"><span class="mono">Operating Systems · 3 days</span><span class="badge"><span class="shimmer">AI generated</span></span></div>
+            <ol class="mock-plan">
+              <li><b>Day 1</b> Scheduling + deadlocks <em>↳ Galvin Ch.5 notes</em></li>
+              <li><b>Day 2</b> Memory, paging, TLB <em>↳ PYQ 2023 Q4, Q7</em></li>
+              <li><b>Day 3</b> Full PYQ under timer <em>↳ OS End-Sem 2024</em></li>
+            </ol>
+          </div>
+          <a href="/ask" class="link">Try Exam Prep AI <span class="arrow">→</span></a>
+        </article>
+        <article class="tile sv-card t-req">
+          <div class="tile-top"><span class="mono sand">03 · Request Board</span><canvas data-glyph="hand" data-size="96" data-cell="4"></canvas></div>
+          <h3 class="serif">Missing something? The batch has it.</h3>
+          <ul class="mock-req">
+            <li><span class="vote">▲<b>23</b></span>CN Unit 4 solved PYQs <span class="hot">High demand</span></li>
+            <li><span class="vote">▲<b>14</b></span>Java lab manual, Sem 3</li>
+          </ul>
+          <a href="/requests" class="link">Open the board <span class="arrow">→</span></a>
+        </article>
+        <article class="tile sv-card t-small">
+          <div class="tile-top"><span class="mono sand">04 · Bookmarks</span><canvas data-glyph="bookmark" data-size="96" data-cell="4"></canvas></div>
+          <h3 class="serif">Save it for exam week.</h3>
+          <p class="muted">One tap keeps a resource on this device, with no account needed.</p>
+        </article>
+        <article class="tile sv-card t-small">
+          <div class="tile-top"><span class="mono ember">05 · Share</span><canvas data-glyph="send" data-size="96" data-cell="4"></canvas></div>
+          <h3 class="serif">Straight to the group chat.</h3>
+          <p class="muted">Send any resource or your whole AI plan to WhatsApp in one click.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 4. NUMBERS ============ -->
+    <section class="numbers" id="numbers">
+      <div class="wrap">
+        <p class="mono muted">Live from the vault</p>
+        <div class="num-grid">
+          <div><b class="serif" data-count="{{ stats.resources }}">0</b><span class="mono muted">resources shared</span></div>
+          <div><b class="serif" data-count="{{ stats.subjects }}">0</b><span class="mono muted">core subjects</span></div>
+          <div><b class="serif" data-count="{{ stats.contributors }}">0</b><span class="mono muted">student contributors</span></div>
+          <div><b class="serif ember" data-count="{{ stats.views }}">0</b><span class="mono muted">times opened</span></div>
+        </div>
+      </div>
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-in serif">
+          {% for _ in range(2) %}{% for s in SUBJECTS %}<span>{{ s }}</span><i>+</i>{% endfor %}{% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. SDG 4 ============ -->
+    <section class="sdg" id="sdg">
+      <div class="wrap sdg-in">
+        <div class="sdg-art"><canvas data-glyph="book" data-size="200"></canvas><div class="sdg-badge"><span class="serif">4</span><span class="mono">SDG</span></div></div>
+        <div>
+          <p class="mono sand">UN SDG 4 · Quality Education · Targets 4.3 &amp; 4.a</p>
+          <h2 class="serif sdg-title">Toppers shouldn't have <em>better WhatsApp groups</em> than everyone else.</h2>
+          <p class="muted sdg-text">Every student gets the same notes, the same PYQs and the same AI study plan, whichever section, batch or friend circle they're in. No paywalls and no gatekeeping.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. FINAL CTA ============ -->
+    <section class="final" id="final">
+      <div class="wrap final-in">
+        <p class="mono eyebrow"><span class="dot"></span> Only for @bmsce.ac.in</p>
+        <h2 class="serif final-title">Your exam is closer<br>than you <em>think.</em></h2>
+        <div class="hero-ctas">
+          <a href="{{ '/dashboard' if user else '/login' }}" class="btn btn-ember">{{ 'Open your dashboard' if user else 'Create your account' }} <span class="arrow">→</span></a>
+          <a href="/browse" class="btn btn-ghost">Browse without an account</a>
+        </div>
+      </div>
+      <footer class="wrap foot mono muted">
+        <span>© 2026 Studit · Students sharing with students</span>
+        <span><a href="/browse">Browse</a> · <a href="/ask">Exam Prep AI</a> · <a href="/requests">Requests</a></span>
+      </footer>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='icons.js') }}"></script>
+  <script>lucide.createIcons();</script>
+  <script src="{{ url_for('static', filename='glyph.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.4/dist/lenis.min.js"></script>
+  <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" } }</script>
+  <script type="module" src="{{ url_for('static', filename='landing.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Exam Prep AI · Studit{% endblock %}
+{% block content %}
+<section class="mesh-bg">
+  <div class="max-w-6xl mx-auto px-4 page-top pb-12 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+    <div class="min-w-0">
+      <div class="eyebrow-s"><i data-lucide="sparkles"></i> AI Exam Prep Assistant</div>
+      <h1 class="h-serif text-5xl sm:text-7xl mt-5">Exam in 3 days?<br><em>Let's make a plan.</em></h1>
+      <p class="mt-5 text-bone/65 max-w-xl leading-relaxed">Pick a subject, set your days and name what scares you. The AI builds a day-by-day plan from <b class="text-bone font-medium">real, upvoted resources</b> on Studit. No made-up links.</p>
+    </div>
+    <canvas data-glyph="sparkles" data-size="260" class="hidden lg:block"></canvas>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 relative">
+  <form id="plan-form" class="sv-card p-2 sm:p-2.5">
+    <div class="grid gap-4 md:grid-cols-12 items-end p-4 sm:p-5">
+      <div class="md:col-span-3">
+        <label class="sv-label" for="subject">Subject</label>
+        <select id="subject" class="sv-select">{% for s in SUBJECTS %}<option {{ 'selected' if preset == s }}>{{ s }}</option>{% endfor %}</select>
+      </div>
+      <div class="md:col-span-3">
+        <label class="sv-label flex justify-between" for="days">Days left <span class="text-ember normal-case tracking-normal"><span id="days-val">3</span> days</span></label>
+        <input id="days" type="range" min="1" max="14" value="3" class="sv-range mt-4">
+        <div class="flex justify-between meta mt-2"><span>1</span><span>7</span><span>14</span></div>
+      </div>
+      <div class="md:col-span-6">
+        <label class="sv-label" for="weak">Weak topics</label>
+        <div class="flex items-center gap-2 rounded-2xl border border-bone/15 bg-black/50 pl-4 pr-1.5 h-[54px] focus-within:border-ember focus-within:shadow-[0_0_0_4px_rgba(255,80,5,.14)] transition">
+          <i data-lucide="target" class="text-bone/40"></i>
+          <input id="weak" placeholder="e.g. normalization, transactions" class="flex-1 min-w-0 bg-transparent outline-none text-bone placeholder:text-bone/35">
+          <button id="go" class="btn btn-ember btn-sm !h-[42px]"><i data-lucide="sparkles"></i> Build plan</button>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div class="mt-4 flex flex-wrap items-center gap-2">
+    <span class="meta mr-1">Try</span>
+    <button class="ex chip-s" data-s="DBMS" data-d="3" data-w="normalization, transactions">DBMS · 3 days</button>
+    <button class="ex chip-s" data-s="Operating Systems" data-d="5" data-w="deadlocks, paging">OS · 5 days</button>
+    <button class="ex chip-s" data-s="Computer Networks" data-d="2" data-w="subnetting">CN · 2 days</button>
+  </div>
+
+  <div id="result" class="mt-12">
+    <div class="grid sm:grid-cols-3 gap-3">
+      {% for icon, t, d in [("library", "Grounded in real resources", "Every day links to notes, PYQs and videos students actually upvoted."), ("target", "Weak topics first", "Your hardest topics get the early days, while your energy is highest."), ("timer", "PYQs on exam eve", "The last day is timed previous-year papers and revision, not new topics.")] %}
+      <div class="sv-card p-6">
+        <div class="w-10 h-10 rounded-xl grid place-items-center border border-bone/10 bg-bone/[.04] text-ember"><i data-lucide="{{ icon }}"></i></div>
+        <div class="font-serif text-2xl mt-4">{{ t }}</div>
+        <p class="text-sm text-bone/55 mt-1.5 leading-relaxed">{{ d }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const days = $("#days");
+  const paintRange = () => {
+    $("#days-val").textContent = days.value;
+    const pct = ((days.value - 1) / 13) * 100;
+    days.style.background = `linear-gradient(90deg,#ff5005 ${pct}%, rgba(237,232,223,.12) ${pct}%)`;
+  };
+  days.addEventListener("input", paintRange); paintRange();
+
+  document.querySelectorAll(".ex").forEach((b) => b.addEventListener("click", () => {
+    $("#subject").value = b.dataset.s; days.value = b.dataset.d; paintRange(); $("#weak").value = b.dataset.w;
+    $("#go").click();
+  }));
+
+  const fmtDate = (offset) => {
+    const d = new Date(); d.setDate(d.getDate() + offset);
+    return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  };
+
+  function updateProgress() {
+    const all = document.querySelectorAll(".task-cb"), done = [...all].filter((c) => c.checked).length;
+    const pct = all.length ? Math.round((done / all.length) * 100) : 0;
+    $("#prog-bar").style.width = pct + "%";
+    $("#prog-txt").textContent = `${done}/${all.length} tasks · ${pct}%`;
+    document.querySelectorAll("[data-day]").forEach((card) => {
+      const cbs = card.querySelectorAll(".task-cb"), n = [...cbs].filter((c) => c.checked).length;
+      card.querySelector(".day-count").textContent = `${n}/${cbs.length}`;
+      const complete = n === cbs.length && cbs.length > 0, node = card.querySelector(".day-node");
+      node.classList.toggle("done", complete);
+      node.textContent = complete ? "✓" : card.dataset.day;
+    });
+    if (pct === 100) toast("Plan complete. You're exam-ready!", "ai");
+  }
+
+  function render(d) {
+    const n = d.days.length;
+    const dayCards = d.days.map((day, i) => {
+      const last = i === n - 1 && n > 1;
+      return `
+      <li class="relative pl-16 pb-6 last:pb-0 fade-in" style="animation-delay:${i * 90}ms" data-day="${Number(day.day)}">
+        <span class="day-node ${last ? "eve" : ""} absolute left-0 top-0">${Number(day.day)}</span>
+        <div class="sv-card overflow-hidden">
+          <div class="flex items-center justify-between gap-3 px-5 pt-4">
+            <div class="flex flex-wrap items-center gap-2 meta uppercase">
+              <span class="${last ? "text-ember" : "text-lilac"}">Day ${Number(day.day)}</span><span>·</span><span>${fmtDate(i)}</span>
+              ${last ? `<span class="ai-badge !h-6" style="color:#ff5005;border-color:rgba(255,80,5,.4);background:rgba(255,80,5,.08)">Exam eve</span>` : i === 0 ? `<span class="ai-badge off !h-6">Today</span>` : ""}
+            </div>
+            <span class="day-count meta tabular-nums">0/${day.tasks.length}</span>
+          </div>
+          <h3 class="font-serif text-2xl sm:text-3xl px-5 mt-2 leading-tight">${esc(day.focus)}</h3>
+          <ul class="px-5 mt-3 space-y-0.5">${day.tasks.map((t) => `
+            <li><label class="flex gap-3 items-start cursor-pointer rounded-lg -mx-2 px-2 py-2 hover:bg-bone/[.04] transition">
+              <input type="checkbox" class="task-cb sv-check peer">
+              <span class="text-bone/80 peer-checked:line-through peer-checked:text-bone/35 transition">${esc(t)}</span>
+            </label></li>`).join("")}</ul>
+          ${day.resources.length ? `
+          <div class="mt-4 px-5 py-4 border-t border-bone/[.07] bg-black/30">
+            <div class="sv-label !mb-2.5">Study from</div>
+            <div class="grid gap-2 sm:grid-cols-2">${day.resources.map((r) => `
+              <a href="/resource/${Number(r.id)}" class="group flex items-center gap-3 rounded-xl border border-bone/10 px-3 py-2.5 hover:border-ember/60 transition">
+                ${typeBadge(r.type)}<span class="text-sm truncate flex-1">${esc(r.title)}</span><i data-lucide="arrow-up-right" class="text-bone/40 group-hover:text-ember"></i>
+              </a>`).join("")}</div>
+          </div>` : `<div class="h-5"></div>`}
+        </div>
+      </li>`;
+    }).join("");
+
+    $("#result").innerHTML = `
+      <div class="grid gap-8 lg:grid-cols-3">
+        <div class="lg:col-span-2">
+          <div class="mesh-bg rounded-[18px] border border-bone/10 p-6 sm:p-8 mb-8 fade-in">
+            <div class="flex flex-wrap items-center gap-3">${aiBadge(d.mode)}<span class="meta">${esc(d.subject)} · ${n}-day plan · exam ${fmtDate(n)}</span></div>
+            <h2 class="h-serif text-4xl sm:text-5xl mt-4">Your ${n}-day <em>${esc(d.subject)}</em> sprint</h2>
+            <p class="text-bone/70 mt-3 leading-relaxed max-w-2xl">${esc(d.summary)}</p>
+            <div class="mt-6 max-w-xl">
+              <div class="flex justify-between meta mb-2"><span>Progress</span><span id="prog-txt">0 tasks</span></div>
+              <div class="h-1.5 rounded-full bg-bone/10 overflow-hidden"><div id="prog-bar" class="h-full w-0 rounded-full bg-gradient-to-r from-ember to-sand transition-all duration-500"></div></div>
+            </div>
+          </div>
+          <ol class="tl">${dayCards}</ol>
+        </div>
+        <aside class="space-y-3 lg:sticky lg:top-24 h-fit">
+          <div class="sv-card p-6 fade-in">
+            <div class="eyebrow-s !text-lilac"><i data-lucide="lightbulb"></i> Coach's tips</div>
+            <ul class="mt-4 space-y-3 text-sm text-bone/75">${d.tips.map((t) => `<li class="flex gap-2.5"><span class="text-ember font-mono">+</span><span>${esc(t)}</span></li>`).join("")}</ul>
+          </div>
+          <div class="sv-card p-5 space-y-2 no-print">
+            <div class="sv-label">Take it with you</div>
+            <button onclick="window.print()" class="btn btn-soft btn-sm w-full justify-center"><i data-lucide="printer"></i> Print / save as PDF</button>
+            <button id="share-plan" class="btn btn-wa btn-sm w-full justify-center"><i data-lucide="send"></i> Share plan on WhatsApp</button>
+          </div>
+        </aside>
+      </div>`;
+    icons();
+    document.querySelectorAll(".task-cb").forEach((c) => c.addEventListener("change", updateProgress));
+    updateProgress();
+    $("#share-plan").addEventListener("click", (e) => {
+      burst(e.currentTarget);
+      const text = `My ${n}-day ${d.subject} exam plan (Studit)\n\n` +
+        d.days.map((x) => `Day ${x.day}: ${x.focus}`).join("\n") + `\n\nMake yours: ${location.origin}/ask`;
+      window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
+    });
+    $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function loadingView() {
+    const steps = ["Reading the most-upvoted resources", "Putting your weak topics first", "Saving PYQs for exam eve", "Writing your day-by-day plan"];
+    $("#result").innerHTML = `
+      <div class="max-w-md mx-auto sv-card p-7 text-center fade-in">
+        <canvas id="ai-glyph" data-glyph="sparkles" data-size="150" data-boost="1" class="mx-auto"></canvas>
+        <div class="font-serif text-3xl mt-3">Building your plan…</div>
+        <div class="meta mt-1">Usually takes a few seconds</div>
+        <ul class="mt-6 space-y-3 text-left">${steps.map((s, i) => `
+          <li id="ls-${i}" class="flex items-center gap-3 text-sm text-bone/35 transition"><span class="w-5 h-5 rounded-md border border-bone/20 grid place-items-center font-mono text-[11px] shrink-0"></span>${s}</li>`).join("")}</ul>
+      </div>`;
+    icons();
+    let i = 0;
+    const tick = () => {
+      const el = document.getElementById("ls-" + i);
+      if (!el) return;
+      el.classList.replace("text-bone/35", "text-bone");
+      el.firstElementChild.className = "w-5 h-5 rounded-md bg-ember text-black grid place-items-center font-mono text-[11px] shrink-0";
+      el.firstElementChild.textContent = "+";
+      i++;
+    };
+    tick();
+    return setInterval(tick, 1400);
+  }
+
+  $("#plan-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#go");
+    setLoading(btn, true, "Planning…");
+    const iv = loadingView();
+    $("#result").scrollIntoView({ behavior: "smooth", block: "center" });
+    try {
+      const d = await postJSON("/api/ai/plan", { subject: $("#subject").value, days_left: Number(days.value), weak_topics: $("#weak").value });
+      clearInterval(iv);
+      render(d);
+      toast(d.mode === "offline" ? "Plan ready (offline mode)" : "Your plan is ready", "ai");
+    } catch {
+      clearInterval(iv);
+      $("#result").innerHTML = emptyState("unlink", "Couldn't build the plan", "Something went wrong. Please try again.");
+      icons();
+      toast("Couldn't build the plan", "err");
+    }
+    setLoading(btn, false);
+  });
+</script>
+{% endblock %}

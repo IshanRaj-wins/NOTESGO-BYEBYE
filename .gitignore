@@ -1,0 +1,23 @@
+.env
+studyvault.db
+uploads/*
+!uploads/.gitkeep
+__pycache__/
+
+server.log
+server.err.log
+
+# never commit secrets
+.env.*
+!.env.example
+.vercel
+*.log
+
+.vercel
+.env*
+
+*.pyc
+!.env.example
+
+# private pitch notes (kept local)
+PITCH_SCRIPT.md

@@ -1,0 +1,30 @@
+%PDF-1.4
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>
+endobj
+4 0 obj
+<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>
+endobj
+5 0 obj
+<</Length 621>>stream
+BT /F1 13 Tf 60 780 Td 18 TL (DBMS Unit 3 - Normalization Quick Notes) ' () ' (1NF: atomic values, no repeating groups.) ' (2NF: 1NF + no partial dependency on part of a composite key.) ' (3NF: 2NF + no transitive dependency [non-key -> non-key].) ' (BCNF: for every FD X -> Y, X must be a superkey.) ' () ' (Exam tips [from PYQs]:) ' (- Given R[A,B,C,D] and FDs, find candidate keys, then decompose to BCNF.) ' (- Check lossless join: common attribute must be a key in one relation.) ' (- Dependency preservation: union of projected FDs must imply original FDs.) ' () ' (Shared on StudyVault by Ishan Raj, CSE 2025) ' ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000054 00000 n 
+0000000105 00000 n 
+0000000217 00000 n 
+0000000280 00000 n 
+trailer<</Size 6/Root 1 0 R>>
+startxref
+949
+%%EOF

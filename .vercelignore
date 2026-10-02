@@ -1,0 +1,11 @@
+# Allowlist: ignore everything, then ship only what the app needs.
+# Keeps .env, studyvault.db, uploads/, logs and notes off Vercel.
+/*
+!app.py
+!db.py
+!ai.py
+!requirements.txt
+!vercel.json
+!templates
+!static
+!seed_files

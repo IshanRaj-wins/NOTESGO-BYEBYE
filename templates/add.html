@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Share a resource · Studit{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 page-top">
+  <div class="flex items-end justify-between gap-6">
+    <div>
+      <div class="eyebrow-s"><i data-lucide="upload"></i> Give back</div>
+      <h1 class="h-serif text-5xl sm:text-6xl mt-3">Share a <em>resource</em></h1>
+      <p class="text-bone/60 mt-3">Your notes could save someone's semester. Add a link or upload a PDF.</p>
+    </div>
+    <canvas data-glyph="files" data-size="130" class="hidden sm:block shrink-0"></canvas>
+  </div>
+
+  {% if error %}<div class="mt-6 rounded-xl border border-[rgba(255,90,90,.35)] bg-[rgba(255,90,90,.08)] text-[#ffb4a8] px-4 py-3 text-sm flex items-center gap-2"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="mt-8 sv-card p-6 sm:p-8 space-y-6">
+    <div>
+      <label class="sv-label" for="title">Title *</label>
+      <input name="title" id="title" required value="{{ form.get('title', '') }}" placeholder="e.g. DBMS Unit 3 Normalization handwritten notes" class="sv-input">
+    </div>
+    <div>
+      <label class="sv-label" for="description">Description</label>
+      <textarea name="description" id="description" rows="3" placeholder="What's inside? Which units or topics does it cover?" class="sv-input">{{ form.get('description', '') }}</textarea>
+    </div>
+
+    <div class="rounded-2xl border border-lilac/25 bg-lilac/[.05] p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+      <div class="text-sm text-bone/75"><span class="text-lilac font-medium">Let AI fill the rest.</span> Subject, type, semester and tags from your title and description.</div>
+      <button type="button" id="autotag" class="btn btn-ai btn-sm shrink-0 justify-center"><i data-lucide="wand-sparkles"></i> Auto-tag</button>
+    </div>
+    <div id="tag-badge"></div>
+
+    <div class="grid sm:grid-cols-3 gap-4">
+      <div>
+        <label class="sv-label" for="subject">Subject *</label>
+        <select name="subject" id="subject" required class="sv-select"><option value="">Choose…</option>{% for s in SUBJECTS %}<option {{ 'selected' if form.get('subject') == s }}>{{ s }}</option>{% endfor %}</select>
+      </div>
+      <div>
+        <label class="sv-label" for="type">Type *</label>
+        <select name="type" id="type" required class="sv-select"><option value="">Choose…</option>{% for t in TYPES %}<option {{ 'selected' if form.get('type') == t }}>{{ t }}</option>{% endfor %}</select>
+      </div>
+      <div>
+        <label class="sv-label" for="semester">Semester</label>
+        <select name="semester" id="semester" class="sv-select"><option value="">None</option>{% for n in range(1, 9) %}<option value="{{ n }}" {{ 'selected' if form.get('semester') == n|string }}>Semester {{ n }}</option>{% endfor %}</select>
+      </div>
+    </div>
+    <div>
+      <label class="sv-label" for="tags">Tags <span class="normal-case tracking-normal text-bone/40">(comma separated)</span></label>
+      <input name="tags" id="tags" value="{{ form.get('tags', '') }}" placeholder="normalization, bcnf, keys" class="sv-input">
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="sv-label" for="url">Link</label>
+        <input name="url" id="url" value="{{ form.get('url', '') }}" placeholder="https://drive.google.com/…" class="sv-input">
+      </div>
+      <div>
+        <label class="sv-label" for="file">…or upload a PDF</label>
+        <input type="file" id="file" name="file" accept="application/pdf,.pdf" class="sv-file w-full pt-1">
+      </div>
+    </div>
+    <div>
+      <label class="sv-label">Your name</label>
+      <input value="{{ user.name if user else '' }}" readonly title="Taken from your signed-in account" class="sv-input opacity-60 cursor-not-allowed">
+    </div>
+    <button class="btn btn-ember w-full justify-center"><i data-lucide="upload"></i> Share with everyone</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $("#autotag").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const title = $("#title").value.trim(), description = $("#description").value.trim();
+    if (!title) { toast("Add a title first", "err"); $("#title").focus(); return; }
+    setLoading(btn, true, "Tagging…");
+    try {
+      const d = await postJSON("/api/ai/tag", { title, description });
+      if (d.subject) $("#subject").value = d.subject;
+      if (d.type) $("#type").value = d.type;
+      if (d.semester) $("#semester").value = String(d.semester);
+      if (d.tags?.length) $("#tags").value = d.tags.join(", ");
+      ["#subject", "#type", "#semester", "#tags"].forEach((s) => {
+        $(s).classList.add("flash");
+        setTimeout(() => $(s).classList.remove("flash"), 1800);
+      });
+      $("#tag-badge").innerHTML = aiBadge(d.mode);
+      icons();
+      toast("Fields filled. Review and share!", "ai");
+    } catch (err) { if (!err.login) toast("AI is busy right now, fill manually", "err"); }
+    setLoading(btn, false);
+  });
+</script>
+{% endblock %}

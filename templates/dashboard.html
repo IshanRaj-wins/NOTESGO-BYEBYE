@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Your dashboard · Studit{% endblock %}
+{% block content %}
+<section class="mesh-bg">
+  <div class="max-w-6xl mx-auto px-4 page-top pb-14 flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div>
+      <div class="eyebrow-s"><i data-lucide="layout-dashboard"></i> Dashboard · <span class="normal-case tracking-normal">{{ user.email }}</span></div>
+      <h1 class="h-serif text-5xl sm:text-7xl mt-4">Hey {{ user.name.split(' ')[0] }}, <em>ready to study?</em></h1>
+      <p class="mt-4 text-bone/65 max-w-xl">Everything you've shared and asked for, plus your saved resources.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="/add" class="btn btn-ember btn-sm"><i data-lucide="plus"></i> Share a resource</a>
+      <a href="/ask" class="btn btn-ghost btn-sm"><i data-lucide="sparkles"></i> Exam Prep AI</a>
+      <button onclick="signOut(this)" class="btn btn-sm text-bone/60 hover:text-bone"><i data-lucide="log-out"></i> Sign out</button>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-6xl mx-auto px-4 pt-2">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-[18px] overflow-hidden border border-bone/10 bg-bone/10">
+    {% for label, val in [("Your uploads", impact.uploads), ("Upvotes earned", impact.upvotes), ("Times your notes were opened", impact.views), ("Requests posted", reqs|length)] %}
+    <div class="bg-[#0b0a09] p-6">
+      <div class="font-serif text-6xl leading-none {{ 'text-ember' if loop.index == 2 }}">{{ val }}</div>
+      <div class="meta uppercase mt-3">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-3 mt-14">
+    <div class="lg:col-span-2">
+      <div class="flex items-end justify-between">
+        <h2 class="h-serif text-4xl">Your uploads</h2>
+        <a href="/add" class="meta hover:text-bone">Share another →</a>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 mt-5" id="mine"></div>
+    </div>
+    <div>
+      <div class="flex items-end justify-between">
+        <h2 class="h-serif text-4xl">Your requests</h2>
+        <a href="/requests" class="meta hover:text-bone">Board →</a>
+      </div>
+      <div class="space-y-3 mt-5">
+        {% for q in reqs %}
+        <div class="sv-card p-4 {{ 'opacity-55' if q.fulfilled }}">
+          <div class="flex items-center gap-3"><span class="meta uppercase">{{ q.subject }}</span>
+            {% if q.fulfilled %}<span class="meta text-sand inline-flex items-center gap-1"><i data-lucide="circle-check"></i> Fulfilled</span>{% else %}<span class="meta inline-flex items-center gap-1"><i data-lucide="arrow-big-up"></i>{{ q.upvotes }}</span>{% endif %}</div>
+          <div class="mt-2 text-sm">{{ q.topic }}</div>
+        </div>
+        {% else %}
+        <div class="sv-dashed text-center py-8 px-4">
+          <canvas data-glyph="inbox" data-size="110" class="mx-auto"></canvas>
+          <p class="text-sm text-bone/55 mt-3">Missing a PYQ or lab manual? Ask the batch.</p>
+          <a href="/requests" class="btn btn-soft btn-sm mt-4">Post a request</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-14">
+    <h2 class="h-serif text-4xl">Saved for later</h2>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-5" id="saved"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if SUPABASE.ready %}
+<script>window.SV_AUTH = { url: {{ SUPABASE.url|tojson }}, key: {{ SUPABASE.key|tojson }} };</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script src="{{ url_for('static', filename='auth.js') }}"></script>
+{% endif %}
+<script>
+  const MINE = {{ mine|tojson }};
+  $("#mine").innerHTML = MINE.length ? MINE.map(cardHTML).join("") :
+    emptyState("send", "You haven't shared anything yet", "Your notes could be someone's lifesaver the night before the exam. Upload a PDF or paste a link.", "/add", "Share your first resource");
+
+  async function loadSaved() {
+    const bm = getBookmarks();
+    if (!bm.length) {
+      $("#saved").innerHTML = emptyState("bookmark", "Nothing saved yet", "Tap the bookmark on any resource to keep it here for exam week.", "/browse", "Browse the vault");
+    } else {
+      const rows = await (await fetch("/api/resources?ids=" + bm.join(","))).json();
+      $("#saved").innerHTML = rows.map(cardHTML).join("");
+    }
+    icons();
+  }
+  loadSaved();
+  document.addEventListener("bookmarks-changed", loadSaved);
+
+  async function signOut(btn) {
+    setLoading(btn, true, "Signing out…");
+    if (window.svSignOut) return svSignOut();
+    await fetch("/api/auth/logout", { method: "POST" });
+    location.href = "/";
+  }
+</script>
+{% endblock %}

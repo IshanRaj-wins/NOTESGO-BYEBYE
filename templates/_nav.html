@@ -1,0 +1,49 @@
+{% set p = request.path %}
+<header class="pnav" id="pnav">
+  <div class="pnav-in">
+    <a href="/" class="pnav-brand" aria-label="Studit home"><span class="brand-ring"></span><span class="serif">Studit</span></a>
+    <nav class="pnav-links" aria-label="Main">
+      <span class="pnav-thumb" aria-hidden="true"></span>
+      <a href="/browse" {{ 'aria-current=page' if p == '/browse' }}><i data-lucide="search"></i><span>Browse</span></a>
+      <a href="/ask" {{ 'aria-current=page' if p == '/ask' }}><i data-lucide="sparkles"></i><span>Exam Prep AI</span></a>
+      <a href="/requests" {{ 'aria-current=page' if p == '/requests' }}><i data-lucide="hand"></i><span>Requests</span></a>
+    </nav>
+    <div class="pnav-end">
+      <a href="/add" class="pnav-share" {{ 'aria-current=page' if p == '/add' }}><i data-lucide="plus"></i><span>Share</span></a>
+      {% if user %}
+      <a href="/dashboard" class="pnav-avatar" title="{{ user.email }}" aria-label="Your dashboard">{{ user.name[:1]|upper }}</a>
+      {% else %}
+      <a href="/login?next={{ p|urlencode }}" class="pnav-signin">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<nav class="tabbar" aria-label="Mobile">
+  <a href="/browse" {{ 'aria-current=page' if p == '/browse' }}><i data-lucide="search"></i><span>Browse</span></a>
+  <a href="/ask" {{ 'aria-current=page' if p == '/ask' }}><i data-lucide="sparkles"></i><span>Ask AI</span></a>
+  <a href="/add" class="tab-share" aria-label="Share a resource"><i data-lucide="plus"></i></a>
+  <a href="/requests" {{ 'aria-current=page' if p == '/requests' }}><i data-lucide="hand"></i><span>Requests</span></a>
+  <a href="{{ '/dashboard' if user else '/browse#bookmarks' }}" {{ 'aria-current=page' if p == '/dashboard' }}><i data-lucide="{{ 'user-round' if user else 'bookmark' }}"></i><span>{{ 'You' if user else 'Saved' }}</span></a>
+</nav>
+
+<script>
+  (() => {
+    const nav = document.getElementById("pnav"), links = nav.querySelector(".pnav-links"), thumb = nav.querySelector(".pnav-thumb");
+    const place = (a, instant) => {
+      if (!a) { thumb.style.opacity = 0; return; }
+      if (instant) thumb.style.transition = "none";
+      thumb.style.opacity = 1;
+      thumb.style.width = a.offsetWidth + "px";
+      thumb.style.transform = `translateX(${a.offsetLeft}px)`;
+      if (instant) requestAnimationFrame(() => (thumb.style.transition = ""));
+    };
+    const cur = () => links.querySelector("[aria-current]");
+    links.querySelectorAll("a").forEach((a) => a.addEventListener("pointerenter", () => place(a)));
+    links.addEventListener("pointerleave", () => place(cur()));
+    addEventListener("load", () => place(cur(), true));
+    addEventListener("resize", () => place(cur(), true));
+    const onScroll = () => nav.classList.toggle("scrolled", scrollY > 30);
+    addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  })();
+</script>

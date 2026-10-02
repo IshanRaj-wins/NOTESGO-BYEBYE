@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join Studit · BMSCE</title>
+  <meta name="theme-color" content="#050505">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='34' fill='none' stroke='%23ff5005' stroke-width='14'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='halo.css') }}">
+  <style>
+    .halo-fallback { animation: drift 18s ease-in-out infinite alternate; }
+    @keyframes drift { to { transform: translate(6%, -4%) rotate(12deg) scale(1.08); } }
+    .page { position: relative; z-index: 3; min-height: 100svh; display: grid; grid-template-columns: 1.1fr 1fr; }
+    .left { padding: 28px 48px; display: flex; flex-direction: column; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 26px; }
+    .brand-ring { width: 22px; height: 22px; border-radius: 50%; border: 4px solid var(--ember); box-shadow: 0 0 18px rgba(255,80,5,.6); }
+    .left h1 { font-size: clamp(2.8rem, 6vw, 5.6rem); line-height: .94; margin: 0; max-width: 11ch; }
+    .left h1 em { color: var(--sand); font-style: italic; }
+    .perks { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 10px; max-width: 26rem; }
+    .perks li { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(5,5,5,.5); backdrop-filter: blur(10px); border: 1px solid var(--line); font-size: 14px; }
+    .perks li span:first-child { color: var(--ember); }
+    .right { display: grid; place-items: center; padding: 28px 20px; background: linear-gradient(90deg, transparent, rgba(5,5,5,.75) 30%); }
+    .card { width: min(420px, 100%); padding: 32px; }
+    h2 { font-size: 2.4rem; margin: 0 0 10px; line-height: 1; }
+    .submit { width: 100%; justify-content: center; margin-top: 22px; }
+    .google { width: 100%; justify-content: center; gap: 12px; margin-top: 26px; height: 52px; background: #fff; color: #1f1f1f; font-weight: 500; border: 1px solid #dadce0; }
+    .google:hover { background: #f4f4f4; }
+    .google:disabled { opacity: .7; cursor: wait; transform: none; }
+    .msg { margin-top: 16px; padding: 12px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; display: none; }
+    .msg.show { display: block; }
+    .msg.err { background: rgba(255,90,90,.1); border: 1px solid rgba(255,90,90,.3); color: #ffb4a8; }
+    .msg.ok { background: rgba(219,186,149,.1); border: 1px solid rgba(219,186,149,.3); color: var(--sand); }
+    .spin { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: s .7s linear infinite; }
+    @keyframes s { to { transform: rotate(360deg); } }
+    .small { font-size: 13px; color: var(--muted); text-align: center; margin-top: 18px; }
+    .small a { color: var(--bone); border-bottom: 1px solid rgba(237,232,223,.3); }
+    @media (max-width: 860px) {
+      .page { grid-template-columns: 1fr; }
+      .left { padding: 20px 16px 0; }
+      .left .perks, .left .foot { display: none; }
+      .left h1 { font-size: 2.6rem; margin-top: 28px; }
+      .right { background: none; padding: 20px 16px 40px; }
+      .card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="halo-fallback" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="page">
+    <section class="left">
+      <a href="/" class="brand"><span class="brand-ring"></span><span class="serif">Studit</span></a>
+      <div>
+        <h1 class="serif">Your batch's notes, <em>finally</em> in one place.</h1>
+        <ul class="perks">
+          <li><span>✦</span><span>Share notes and PYQs with your whole batch</span></li>
+          <li><span>✦</span><span>Post and back requests on the Request Board</span></li>
+          <li><span>✦</span><span>A dashboard that tracks your uploads and their impact</span></li>
+        </ul>
+      </div>
+      <p class="mono muted foot">Only @bmsce.ac.in accounts · SDG 4</p>
+    </section>
+
+    <section class="right">
+      <div class="card glass">
+        {% if not SUPABASE.ready %}
+        <h2 class="serif">Auth isn't configured yet</h2>
+        <p class="muted" style="line-height:1.6">Add <code>SUPABASE_URL</code> and <code>SUPABASE_PUBLISHABLE_KEY</code> to <code>.env</code> and restart the server. See <code>SUPABASE_SETUP.md</code>.</p>
+        {% if SUPABASE.issues %}<p class="muted" style="font-size:.85rem">Check: {{ SUPABASE.issues | join(" · ") }}</p>{% endif %}
+        <a href="/browse" class="btn btn-ghost submit">Browse without an account</a>
+        {% else %}
+        <h2 class="serif">Join the vault</h2>
+        <p class="muted" style="margin:0;font-size:14px;line-height:1.6">Sign in with your <b style="color:var(--bone)">@bmsce.ac.in</b> Google account. One click, no passwords, no emails to confirm.</p>
+        <button class="btn google" id="google-btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+        <div class="msg" id="msg" role="alert"></div>
+        <p class="small"><a href="/browse">Continue browsing without an account</a></p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  {% if SUPABASE.ready %}
+  <script>window.SV_AUTH = { url: {{ SUPABASE.url|tojson }}, key: {{ SUPABASE.key|tojson }}, next: {{ next|tojson }} };</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+  <script src="{{ url_for('static', filename='auth.js') }}"></script>
+  {% endif %}
+</body>
+</html>
